@@ -1,5 +1,5 @@
 --[[ 
-     Library - Final Release
+    YC GUI Library - Final Release
     Author: BeiHai
     
     更新内容:
@@ -47,7 +47,7 @@ local DefaultConfig = {
 	WindowWidth = 158, 
 	WindowMaxHeight = 350,
 	ItemHeight = 34,
-	Theme = "Sakura",
+	Theme = "Default",
 	UIVisible = true,
 	UseCorners = true, 
 	UseStroke = true   
@@ -177,11 +177,11 @@ function Library:LoadLoader()
 	local Main = Instance.new("Frame"); Main.Parent=Loader; Main.BackgroundColor3=Color3.new(0,0,0); Main.BackgroundTransparency=0; Main.Size=UDim2.new(1,0,1,0); Main.ZIndex=1
 	local Cen = Instance.new("Frame"); Cen.Parent=Main; Cen.Size=UDim2.new(0,400,0,150); Cen.AnchorPoint=Vector2.new(0.5,0.5); Cen.Position=UDim2.new(0.5,0,0.5,0); Cen.BackgroundTransparency=1; Cen.ZIndex=2
 	
-	local MainTitle = Instance.new("TextLabel"); MainTitle.Parent = Cen; MainTitle.Text = "ESP/AIM"; MainTitle.Font = Enum.Font.GothamBlack; MainTitle.TextSize = 60; MainTitle.TextColor3 = Color3.new(1,1,1); MainTitle.Size = UDim2.new(1, 0, 0, 70); MainTitle.Position = UDim2.new(0, 0, 0.5, -40); MainTitle.AnchorPoint = Vector2.new(0, 0.5); MainTitle.BackgroundTransparency = 1; MainTitle.TextTransparency = 1
+	local MainTitle = Instance.new("TextLabel"); MainTitle.Parent = Cen; MainTitle.Text = "YC GUI"; MainTitle.Font = Enum.Font.GothamBlack; MainTitle.TextSize = 60; MainTitle.TextColor3 = Color3.new(1,1,1); MainTitle.Size = UDim2.new(1, 0, 0, 70); MainTitle.Position = UDim2.new(0, 0, 0.5, -40); MainTitle.AnchorPoint = Vector2.new(0, 0.5); MainTitle.BackgroundTransparency = 1; MainTitle.TextTransparency = 1
 	local TitleScale = Instance.new("UIScale"); TitleScale.Parent = MainTitle; TitleScale.Scale = 1.1
 	local MainGradient = Instance.new("UIGradient"); MainGradient.Parent = MainTitle; MainGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 50, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 150, 255))}
 	
-    local SubTitle = Instance.new("TextLabel"); SubTitle.Parent = Cen; SubTitle.Text = "By HUI"; SubTitle.Font = Enum.Font.Gotham; SubTitle.TextSize = 16; SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220); SubTitle.Size = UDim2.new(1, 0, 0, 20); SubTitle.AnchorPoint = Vector2.new(1, 0); SubTitle.Position = UDim2.new(1, -20, 0.5, 25); SubTitle.TextXAlignment = Enum.TextXAlignment.Right; SubTitle.BackgroundTransparency = 1; SubTitle.TextTransparency = 1
+    local SubTitle = Instance.new("TextLabel"); SubTitle.Parent = Cen; SubTitle.Text = "By BeiHai"; SubTitle.Font = Enum.Font.Gotham; SubTitle.TextSize = 16; SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220); SubTitle.Size = UDim2.new(1, 0, 0, 20); SubTitle.AnchorPoint = Vector2.new(1, 0); SubTitle.Position = UDim2.new(1, -20, 0.5, 25); SubTitle.TextXAlignment = Enum.TextXAlignment.Right; SubTitle.BackgroundTransparency = 1; SubTitle.TextTransparency = 1
 
 	Main.BackgroundTransparency = 0.3
 	local t1 = TweenService:Create(MainTitle, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0})
@@ -377,7 +377,7 @@ local function CreateDynamicIsland()
 	Island.Size=UDim2.new(0,100,0,30); Island.Position=UDim2.new(0.5,0,0,10); Island.AnchorPoint=Vector2.new(0.5,0)
 	Island.BackgroundColor3=Color3.new(0,0,0); 
 	Island.BackgroundTransparency = Library.Config.UIVisible and 0.1 or 0.6
-	Island.Text="ESP/AIM"; Island.Font=Enum.Font.GothamBold; Island.TextSize=14; Island.TextColor3=Color3.new(1,1,1); Island.AutoButtonColor=false; Island.ZIndex=100
+	Island.Text="YC GUI"; Island.Font=Enum.Font.GothamBold; Island.TextSize=14; Island.TextColor3=Color3.new(1,1,1); Island.AutoButtonColor=false; Island.ZIndex=100
 	
 	local UICorner = Instance.new("UICorner"); 
     UICorner.CornerRadius = UDim.new(1,0) 
