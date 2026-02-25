@@ -47,8 +47,8 @@ local DefaultConfig = {
 	WindowWidth = 158, 
 	WindowMaxHeight = 350,
 	ItemHeight = 34,
-	Theme = "Default",
-	UIVisible = true,
+	Theme = "Sakura",
+	UIVisible = false,
 	UseCorners = true, 
 	UseStroke = true   
 }
