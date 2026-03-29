@@ -1,0 +1,551 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/LumiereSeren/UI/refs/heads/main/cyyWind.lua"))()
+
+-- 工具函数：获取执行器名称
+local function getExecutorName()
+    if type(getexecutor) == "function" and getexecutor() then 
+        return getexecutor()
+    elseif type(identifyexecutor) == "function" and identifyexecutor() then 
+        return identifyexecutor()
+    else
+        return "未知 (未找到识别函数)"
+    end
+end
+
+-- 即时复活功能（来自您的各.lua文件）
+local WOW_player = game:GetService("Players").LocalPlayer
+local lastDeathPosition = nil
+local isRespawning = false
+getgenv().WOW_InstantRespawn = true
+
+local function setupInstantRespawn()
+    WOW_player.CharacterAdded:Connect(function(character)
+        if getgenv().WOW_InstantRespawn and lastDeathPosition then
+            task.wait(0.05)
+            isRespawning = true
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 1)
+            if humanoidRootPart then
+                humanoidRootPart.CFrame = lastDeathPosition
+            end
+            isRespawning = false
+        end
+    end)
+
+    local function monitorHealth()
+        while true do
+            task.wait(0.1)
+            if not getgenv().WOW_InstantRespawn then continue end
+            
+            local character = WOW_player.Character
+            if character and not isRespawning then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid and humanoid.Health <= 0 then
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        lastDeathPosition = humanoidRootPart.CFrame
+                    end
+                end
+            end
+        end
+    end
+    task.spawn(monitorHealth)
+end
+setupInstantRespawn()
+
+-- 无冲撞功能
+local noclipEnabled = false
+local noclipConnection = nil
+
+local function toggleNoclip(value)
+    noclipEnabled = value
+    if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end
+    if value then
+        noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+            if noclipEnabled then
+                local character = game.Players.LocalPlayer.Character
+                if character then
+                    for _, part in pairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end)
+    else
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
+local function setupCharacterListeners()
+    local LocalPlayer = game:GetService("Players").LocalPlayer
+    LocalPlayer.CharacterAdded:Connect(function()
+        if noclipEnabled then
+            task.wait(0.5)
+            toggleNoclip(true)
+        end
+    end)
+end
+setupCharacterListeners()
+
+-- 外部图片资源（背景视频链接可在此修改）
+local ExternalImages = {
+    MainTitleImage = "https://raw.githubusercontent.com/LumiereSeren/rob/refs/heads/main/IMG_20260122_004043.jpg",
+    TeamLogoImage = "https://raw.githubusercontent.com/LumiereSeren/rob/refs/heads/main/IMG_20260122_004043.jpg",
+    StatusIconImage = "https://raw.githubusercontent.com/LumiereSeren/rob/refs/heads/main/IMG_20260122_004043.jpg",
+    -- 视频背景：修改下面的链接即可更换（必须加上 "video:" 前缀）
+    BackgroundImage = "video:https://raw.githubusercontent.com/951357nvjn/dyzs/refs/heads/main/%E9%9B%AA%E5%A4%A9%20%E4%BC%8A%E8%95%BE%E5%A8%9C%20%E6%9C%AA%E5%B0%BD%E4%B9%8B%E6%97%85.mp4",
+    ThumbnailImage = "https://raw.githubusercontent.com/LumiereSeren/rob/refs/heads/main/IMG_20260122_004043.jpg"
+}
+
+local function loadExternalImage(url, defaultIcon)
+    local success, result = pcall(function()
+        game:HttpGet(url, true)
+        return url
+    end)
+    if success then return url else return defaultIcon or "image" end
+end
+
+-- 弹窗
+WindUI:Popup({
+    Title = "債券を刷る",
+    Icon = "sparkles",
+    Content = "竞",
+    Buttons = {
+        {
+            Title = "进入",
+            Icon = "arrow-right",
+            Variant = "Primary",
+            Callback = function() 
+                createMainWindow()
+            end
+        }
+    }
+})
+
+-- ============================================================================
+-- 自动农场功能模块
+-- ============================================================================
+local farmMaps = {
+    { name = "波谷站",   folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:find("Sorcerer") and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "丛林岛",   folder = "NPCs",    match = function(v) return v.Name:sub(1,6) == "Monkey" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "洞空世界", folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:find("Hollow") and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "魔王岛",   folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:find("SaberAlterBoss") and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "沙漠之岛", folder = "NPCs",    match = function(v) return v.Name:sub(1,12) == "DesertBandit" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "审判岛",   folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:sub(1,9) == "Swordsman" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "史莱姆岛", folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:sub(1,5) == "Slime" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "水手岛",   folder = "NPCs",    match = function(v) return v.Name:sub(1,5) == "2guns" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "新手岛屿", folder = "NPCs",    match = function(v) return v.Name:sub(1,5) == "Thief" and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChildOfClass("Humanoid") and v.Humanoid.Health > 0 end },
+    { name = "新宿岛",   folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:find("Curse") and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "学院岛",   folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:sub(1,14) == "AcademyTeacher" and v:FindFirstChild("HumanoidRootPart") end },
+    { name = "雪岛",     folder = "NPCs",    match = function(v) return v:IsA("Model") and v.Name:find("FrostRogue") and v:FindFirstChild("HumanoidRootPart") end },
+}
+
+local farmRunning = false
+local farmCoroutine = nil
+local selectedMap = nil
+
+local function autoFarmLoop()
+    local plr = game:GetService("Players").LocalPlayer
+    local index = 1
+    local lastSwitch = tick()
+    local stayTime = 1
+
+    while farmRunning do
+        task.wait(0.001)
+        local char = plr.Character
+        if not char then continue end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not root or not humanoid then continue end
+
+        local map = farmMaps[selectedMap]
+        if not map then
+            farmRunning = false
+            break
+        end
+
+        local npcContainer = workspace:FindFirstChild(map.folder)
+        if not npcContainer then
+            task.wait(0.5)
+            continue
+        end
+
+        local npcs = {}
+        for _, v in pairs(npcContainer:GetChildren()) do
+            if map.match(v) then
+                table.insert(npcs, v)
+            end
+        end
+
+        if #npcs > 0 then
+            humanoid.PlatformStand = true
+            humanoid.AutoRotate = false
+            root.Velocity = Vector3.new(0, 0, 0)
+            root.RotVelocity = Vector3.new(0, 0, 0)
+
+            if index > #npcs then index = 1 end
+            if tick() - lastSwitch >= stayTime then
+                index = index % #npcs + 1
+                lastSwitch = tick()
+            end
+
+            local npc = npcs[index]
+            local npcRoot = npc:FindFirstChild("HumanoidRootPart")
+            if npcRoot then
+                root.CFrame = CFrame.new(npcRoot.Position + Vector3.new(0, 6, 0), npcRoot.Position)
+            end
+        else
+            humanoid.PlatformStand = false
+            index = 1
+            if not _G.farmNoMonsterNotified then
+                _G.farmNoMonsterNotified = true
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "提示",
+                    Text = "未找到 " .. map.name .. " 怪物",
+                    Duration = 3
+                })
+                task.wait(3)
+                _G.farmNoMonsterNotified = false
+            end
+            task.wait(0.5)
+        end
+    end
+
+    local char = plr.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+    end
+    farmRunning = false
+end
+
+local function startAutoFarm()
+    if farmRunning then return end
+    if not selectedMap then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "提示",
+            Text = "请先选择地图",
+            Duration = 2
+        })
+        return
+    end
+    farmRunning = true
+    farmCoroutine = task.spawn(autoFarmLoop)
+end
+
+local function stopAutoFarm()
+    farmRunning = false
+    if farmCoroutine then
+        task.cancel(farmCoroutine)
+        farmCoroutine = nil
+    end
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+    end
+end
+
+-- ============================================================================
+-- 无限跳功能
+-- ============================================================================
+local infiniteJumpRunning = false
+local infiniteJumpCoroutine = nil
+
+local function infiniteJumpLoop()
+    local plr = game:GetService("Players").LocalPlayer
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvents")
+    if remote then remote = remote:FindFirstChild("MultiJumpRemote") end
+    if not remote then
+        warn("未找到 MultiJumpRemote 事件，无限跳可能无效")
+    end
+
+    while infiniteJumpRunning do
+        local char = plr.Character
+        if not char then 
+            char = plr.CharacterAdded:Wait()
+        end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char:FindFirstChild("Humanoid")
+        if root and humanoid then
+            local basePos = root.Position
+            for i = 1, 6 do
+                local newPos = Vector3.new(basePos.X, basePos.Y + (i * 3), basePos.Z)
+                if remote then pcall(function() remote:FireServer(i, newPos) end) end
+                task.wait(0.07)
+            end
+            humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+            task.wait(0.15)
+        end
+        task.wait()
+    end
+end
+
+local function startInfiniteJump()
+    if infiniteJumpRunning then return end
+    infiniteJumpRunning = true
+    infiniteJumpCoroutine = task.spawn(infiniteJumpLoop)
+end
+
+local function stopInfiniteJump()
+    infiniteJumpRunning = false
+    if infiniteJumpCoroutine then
+        task.cancel(infiniteJumpCoroutine)
+        infiniteJumpCoroutine = nil
+    end
+end
+
+-- ============================================================================
+-- 自动攻击功能
+-- ============================================================================
+local autoAttackRunning = false
+local autoAttackCoroutine = nil
+
+local function autoAttackLoop()
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("CombatSystem")
+    if remote then remote = remote:FindFirstChild("Remotes") end
+    if remote then remote = remote:FindFirstChild("RequestHit") end
+    if not remote then
+        warn("未找到 CombatSystem.Remotes.RequestHit 事件，自动攻击可能无效")
+    end
+
+    while autoAttackRunning do
+        if remote then pcall(function() remote:FireServer() end) end
+        task.wait(0.05)
+    end
+end
+
+local function startAutoAttack()
+    if autoAttackRunning then return end
+    autoAttackRunning = true
+    autoAttackCoroutine = task.spawn(autoAttackLoop)
+end
+
+local function stopAutoAttack()
+    autoAttackRunning = false
+    if autoAttackCoroutine then
+        task.cancel(autoAttackCoroutine)
+        autoAttackCoroutine = nil
+    end
+end
+
+-- ============================================================================
+-- 主窗口创建函数
+-- ============================================================================
+function createMainWindow()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    
+    local windowOptions = {
+        Title = "閃光の芦毛怪物<font color='#00FF00'>1.0</font>",
+        Icon = "zap",
+        IconTransparency = 0.5,
+        IconThemed = true,
+        Author = "小栗帽",
+        Folder = "CloudHub",
+        Size = UDim2.fromOffset(400, 300),
+        Transparent = true,
+        Theme = "Dark",
+        User = {
+            Enabled = true,
+            Callback = function() end,
+            Anonymous = false
+        },
+        SideBarWidth = 200,
+        ScrollBarEnabled = true,
+    }
+    
+    -- 直接使用视频背景（已包含 "video:" 前缀）
+    if ExternalImages.BackgroundImage then
+        windowOptions.Background = ExternalImages.BackgroundImage
+    else
+        windowOptions.Background = {
+            Type = "Gradient",
+            Colors = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromHex("#1a1a2e")),
+                ColorSequenceKeypoint.new(0.5, Color3.fromHex("#16213e")),
+                ColorSequenceKeypoint.new(1, Color3.fromHex("#0f3460"))
+            }),
+            Rotation = 45
+        }
+    end
+
+    local Window = WindUI:CreateWindow(windowOptions)
+    
+    -- 时间标签
+    local TimeTag = Window:Tag({
+        Title = "00:00",
+        Color = Color3.fromHex("#30ff6a")
+    })
+    local hue = 0
+    task.spawn(function()
+        while true do
+            local now = os.date("*t")
+            local hours = string.format("%02d", now.hour)
+            local minutes = string.format("%02d", now.min)
+            hue = (hue + 0.01) % 1
+            local color = Color3.fromHSV(hue, 1, 1)
+            TimeTag:SetTitle(hours .. ":" .. minutes)
+            TimeTag:SetColor(color)
+            task.wait(0.06)
+        end
+    end)
+    
+    Window:Tag({
+        Title = "v1.1",
+        Color = Color3.fromHex("#30ff6a")
+    })
+
+    Window:EditOpenButton({
+        Title = "小栗帽之力",
+        Icon = "crown",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 3, 
+        Color = ColorSequence.new(
+            Color3.fromHex("FF0F7B"), 
+            Color3.fromHex("F89B29")
+        ),
+        Draggable = true, 
+        StrokeColor = ColorSequence.new({ 
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),     
+            ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)), 
+            ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 255, 0)), 
+            ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 0)),   
+            ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),   
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 128))    
+        }),
+    })
+    
+    -- 主页标签页
+    local MainTab = Window:Tab({
+        Title = "主页",
+        Icon = "home",
+        Locked = false,
+    })
+    
+    MainTab:Paragraph({
+        Title = "",
+        Desc = "",
+        Image = loadExternalImage(ExternalImages.MainTitleImage, "star"),
+        ImageSize = 42,
+        Thumbnail = loadExternalImage(ExternalImages.ThumbnailImage, "user"),
+        ThumbnailSize = 120
+    })
+    
+    MainTab:Paragraph({
+        Title = "德与中山团队",
+        Desc = "当前服务器ID: " .. game.PlaceId,
+        Image = loadExternalImage(ExternalImages.TeamLogoImage, "users"),
+        ImageSize = 32
+    })
+    
+    local executorName = getExecutorName() 
+    MainTab:Paragraph({
+        Title = "注入器",
+        Desc = ": " .. executorName,
+        Image = "cpu",
+        ImageSize = 32
+    })
+    
+    -- ==================== 自动农场标签页 ====================
+    local sbsxc = Window:Tab({
+        Title = "自动农场",
+        Icon = "farm",
+        Locked = false,
+    })
+    
+    -- 地图选择下拉菜单
+    local mapNames = {}
+    for _, m in ipairs(farmMaps) do
+        table.insert(mapNames, m.name)
+    end
+    local mapDropdown = sbsxc:Dropdown({
+        Title = "选择地图",
+        Values = mapNames,
+        Value = mapNames[1],
+        Callback = function(value)
+            for i, m in ipairs(farmMaps) do
+                if m.name == value then
+                    selectedMap = i
+                    break
+                end
+            end
+        end
+    })
+    selectedMap = 1
+    mapDropdown:Select(mapNames[1])
+    
+    -- 自动农场开关
+    local farmToggle = sbsxc:Toggle({
+        Title = "自动农场开关",
+        Desc = "开启后自动寻找并移动到怪物头顶",
+        Value = false,
+        Callback = function(state)
+            if state then startAutoFarm() else stopAutoFarm() end
+        end
+    })
+    
+    -- 状态显示
+    local statusLabel = sbsxc:Paragraph({
+        Title = "当前状态",
+        Desc = "未运行",
+        Image = "info",
+        ImageSize = 20
+    })
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            if farmRunning then
+                local mapName = selectedMap and farmMaps[selectedMap].name or "未选择"
+                statusLabel:SetDesc("运行中，地图：" .. mapName)
+            else
+                statusLabel:SetDesc("已停止")
+            end
+        end
+    end)
+    
+    -- 无限跳开关
+    local infiniteJumpToggle = sbsxc:Toggle({
+        Title = "无限跳",
+        Desc = "开启后在空中连续跳跃",
+        Value = false,
+        Callback = function(state)
+            if state then startInfiniteJump() else stopInfiniteJump() end
+        end
+    })
+    
+    -- 自动攻击开关
+    local autoAttackToggle = sbsxc:Toggle({
+        Title = "自动攻击",
+        Desc = "自动发送攻击请求",
+        Value = false,
+        Callback = function(state)
+            if state then startAutoAttack() else stopAutoAttack() end
+        end
+    })
+    
+    -- 无冲撞开关（原有）
+    local noclipToggle = sbsxc:Toggle({
+        Title = "无冲撞模式",
+        Desc = "穿墙模式",
+        Value = false,
+        Callback = function(state)
+            toggleNoclip(state)
+        end
+    })
+    
+    Window:OnClose(function() end)
+    Window:OnDestroy(function() end)
+end
