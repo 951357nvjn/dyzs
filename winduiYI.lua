@@ -11938,8 +11938,8 @@ if not as.IgnoreAlerts then
 as:SetToTheCenter()
 as:Dialog{
 
-Title="关闭YI",
-Content="您是否要关闭YI？这将彻底关闭它",
+Title="关闭YI_HUB",
+Content="您是否要关闭YI_HUB？",
 Buttons={
 {
 Title="取消",
