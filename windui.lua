@@ -7,12 +7,6 @@
 v1.6.62|2025-12-09|用于脚本的Roblox UI库要查看源代码，请参阅官方GitHub存储库上的“ SRC/”文件夹。作者:FootageSus（影片，.ftgs，oftgs）Github：https：//github.com/Footagesus/WindUI.不和谐：https：//discord.gg/ftgs-development-hub-1300692552005189632.许可证：麻省理工学院
 
 ]]
-local ttfData = game:HttpGet("https://raw.githubusercontent.com/951357nvjn/dyzs/refs/heads/main/%E4%B9%90%E7%B1%B3%E6%A0%80%E5%A4%8F%E6%B5%85%E9%A3%8E%E4%BD%93.ttf")
-writefile("CustomFont.ttf", ttfData)
-
-if loadfont then
-    loadfont("CustomFont.ttf")
-end
 local a a={cache={}, load=function(b)if not a.cache[b]then a.cache[b]={c=a[b]()}end return a.cache[b].c end}do function a.a()return{
 
 
@@ -96,7 +90,7 @@ l.SetIconsType"lucide"
 local m
 
 local p={
-Font="rbxassetid://12187365364",
+Font="rbxassetid://3049835890",
 Localization=nil,
 CanDraggable=true,
 Theme=nil,
