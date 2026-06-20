@@ -11673,14 +11673,21 @@ end)
 end
 
 aj.AddSignal(ae.InputBegan,function(p,r)
-if r then return end
-
-if as.ToggleKey then
-if p.KeyCode==as.ToggleKey then
-as:Toggle()
-end
-end
+    if r then return end
+    
+    -- 用户自定义 ToggleKey（切换显示/隐藏）
+    if as.ToggleKey then
+        if p.KeyCode==as.ToggleKey then
+            as:Toggle()
+        end
+    end
+    
+    -- 内置默认最小化快捷键：N（无需外部配置，自动生效）
+    if p.KeyCode == Enum.KeyCode.N and not as.Closed then
+        as:Close()
+    end
 end)
+
 
 task.spawn(function()
 
@@ -11938,8 +11945,8 @@ if not as.IgnoreAlerts then
 as:SetToTheCenter()
 as:Dialog{
 
-Title="关闭YI_HUB",
-Content="您是否要关闭YI_HUB？",
+Title="关闭YI",
+Content="您是否要关闭YI？这将彻底关闭它",
 Buttons={
 {
 Title="取消",
