@@ -11673,21 +11673,20 @@ end)
 end
 
 aj.AddSignal(ae.InputBegan,function(p,r)
-    if r then return end
-    
-    -- 用户自定义 ToggleKey（切换显示/隐藏）
-    if as.ToggleKey then
-        if p.KeyCode==as.ToggleKey then
-            as:Toggle()
-        end
-    end
-    
-    -- 内置默认最小化快捷键：N（无需外部配置，自动生效）
-    if p.KeyCode == Enum.KeyCode.N and not as.Closed then
-        as:Close()
-    end
-end)
+if r then return end
 
+if as.ToggleKey then
+if p.KeyCode==as.ToggleKey then
+as:Toggle()
+end
+end
+
+if p.KeyCode == Enum.KeyCode.N then
+if not as.Closed then
+as:Close()
+end
+end
+end)
 
 task.spawn(function()
 
