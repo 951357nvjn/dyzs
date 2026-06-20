@@ -11682,9 +11682,7 @@ end
 end
 
 if p.KeyCode == Enum.KeyCode.N then
-if not as.Closed then
-as:Close()
-end
+as:Toggle()
 end
 end)
 
